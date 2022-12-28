@@ -249,7 +249,7 @@ KMCUDAResult kmeans_init_centroids(
       INFO("randomly picking initial centroids...\n");
       std::vector<uint32_t> chosen(samples_size);
       #pragma omp parallel for
-      for (uint32_t s = 0; s < samples_size; s++) {
+      for (int32_t s = 0; s < samples_size; s++) {
         chosen[s] = s;
       }
       std::random_shuffle(chosen.begin(), chosen.end());
@@ -654,7 +654,7 @@ KMCUDAResult knn_cuda(
         new std::tuple<uint32_t, uint32_t>[samples_size]);
     if (device_ptrs < 0) {
       #pragma omp parallel for
-      for (uint32_t s = 0; s < samples_size; s++) {
+      for (int32_t s = 0; s < samples_size; s++) {
         asses_with_idxs[s] = std::make_tuple(assignments[s], s);
       }
     } else {
@@ -665,7 +665,7 @@ KMCUDAResult knn_cuda(
           asses_on_host.get(), assignments, samples_size * sizeof(uint32_t),
           cudaMemcpyDeviceToHost), kmcudaMemoryCopyError);
       #pragma omp parallel for
-      for (uint32_t s = 0; s < samples_size; s++) {
+      for (int32_t s = 0; s < samples_size; s++) {
         asses_with_idxs[s] = std::make_tuple(asses_on_host[s], s);
       }
     }

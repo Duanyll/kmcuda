@@ -12,7 +12,7 @@ class SetupConfigurationError(Exception):
 
 
 class CMakeBuild(build_py):
-    SHLIB = "libKMCUDA.so"
+    SHLIB = "libKMCUDA.dll"
 
     def run(self):
         if not self.dry_run:
@@ -25,23 +25,23 @@ class CMakeBuild(build_py):
         return outputs
 
     def _build(self, builddir=None):
-        if platform != "darwin":
-            cuda_toolkit_dir = os.getenv("CUDA_TOOLKIT_ROOT_DIR")
-            if cuda_toolkit_dir is None:
-                raise SetupConfigurationError(
-                    "CUDA_TOOLKIT_ROOT_DIR environment variable must be defined")
-            check_call(("cmake", "-DCMAKE_BUILD_TYPE=Release", "-DDISABLE_R=y",
-                        "-DCUDA_TOOLKIT_ROOT_DIR=%s" % cuda_toolkit_dir, "."))
-        else:
-            ccbin = os.getenv("CUDA_HOST_COMPILER", "/usr/bin/clang")
-            env = dict(os.environ)
-            env.setdefault("CC", "/usr/local/opt/llvm/bin/clang")
-            env.setdefault("CXX", "/usr/local/opt/llvm/bin/clang++")
-            env.setdefault("LDFLAGS", "-L/usr/local/opt/llvm/lib/")
-            check_call(("cmake", "-DCMAKE_BUILD_TYPE=Release", "-DDISABLE_R=y",
-                        "-DCUDA_HOST_COMPILER=%s" % ccbin, "-DSUFFIX=.so", "."),
-                       env=env)
-        check_call(("make", "-j%d" % cpu_count()))
+        # if platform != "darwin":
+        #     cuda_toolkit_dir = os.getenv("CUDA_TOOLKIT_ROOT_DIR")
+        #     if cuda_toolkit_dir is None:
+        #         raise SetupConfigurationError(
+        #             "CUDA_TOOLKIT_ROOT_DIR environment variable must be defined")
+        #     check_call(("cmake", "-DCMAKE_BUILD_TYPE=Release", "-DDISABLE_R=y",
+        #                 "-DCUDA_TOOLKIT_ROOT_DIR=%s" % cuda_toolkit_dir, "."))
+        # else:
+        #     ccbin = os.getenv("CUDA_HOST_COMPILER", "/usr/bin/clang")
+        #     env = dict(os.environ)
+        #     env.setdefault("CC", "/usr/local/opt/llvm/bin/clang")
+        #     env.setdefault("CXX", "/usr/local/opt/llvm/bin/clang++")
+        #     env.setdefault("LDFLAGS", "-L/usr/local/opt/llvm/lib/")
+        #     check_call(("cmake", "-DCMAKE_BUILD_TYPE=Release", "-DDISABLE_R=y",
+        #                 "-DCUDA_HOST_COMPILER=%s" % ccbin, "-DSUFFIX=.so", "."),
+        #                env=env)
+        # check_call(("make", "-j%d" % cpu_count()))
         self.mkpath(self.build_lib)
         dest = os.path.join(self.build_lib, self.SHLIB)
         copyfile(self.SHLIB, dest)
