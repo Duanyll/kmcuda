@@ -199,7 +199,7 @@ static PyObject *py_kmeans_cuda(PyObject *self, PyObject *args, PyObject *kwargs
     if (!set_init(init_obj)) {
       return NULL;
     }
-  } else if PyTuple_Check(init_obj) {
+  } else if (PyTuple_Check(init_obj)) {
     auto e1 = PyTuple_GetItem(init_obj, 0);
     if (e1 == nullptr || e1 == Py_None) {
       PyErr_SetString(
@@ -306,7 +306,7 @@ static PyObject *py_kmeans_cuda(PyObject *self, PyObject *args, PyObject *kwargs
       return NULL;
     }
     if (cudaMalloc(reinterpret_cast<void **>(&assignments),
-                   samples_size * sizeof(uint32_t)) != cudaSuccess) {
+                   static_cast<uint64_t>(samples_size) * sizeof(uint32_t)) != cudaSuccess) {
       set_cuda_malloc_error();
       return NULL;
     }
@@ -586,7 +586,7 @@ static PyObject *py_knn_cuda(PyObject *self, PyObject *args, PyObject *kwargs) {
       return NULL;
     }
     if (cudaMalloc(reinterpret_cast<void **>(&neighbors),
-                   samples_size * k * sizeof(float)) != cudaSuccess) {
+                   static_cast<uint64_t>(samples_size) * k * sizeof(float)) != cudaSuccess) {
       set_cuda_malloc_error();
       return NULL;
     }

@@ -83,18 +83,15 @@ static std::vector<int> setup_devices(uint32_t device, int device_ptrs, int verb
              dev, cudaGetErrorString(err));
         devs.pop_back();
       }
-
-#if defined(__CUDA_ARCH__)
-	  if (props.major != (CUDA_ARCH / 10) || props.minor != (CUDA_ARCH % 10)) {
-		  INFO("compute capability mismatch for device %d: wanted %d.%d, have "
-			  "%d.%d\n>>>> you may want to build kmcuda with -DCUDA_ARCH=%d "
-			  "(refer to \"Building\" in README.md)\n",
-			  dev, CUDA_ARCH / 10, CUDA_ARCH % 10, props.major, props.minor,
-			  props.major * 10 + props.minor);
-		  devs.pop_back();
-	}
-#endif
-
+      if (props.major < (CUDA_ARCH / 10) ||
+          (props.major == (CUDA_ARCH / 10) && props.minor < (CUDA_ARCH % 10))) {
+        INFO("compute capability mismatch for device %d: wanted %d.%d, have "
+             "%d.%d\n>>>> you may want to build kmcuda with -DCUDA_ARCH=%d "
+             "(refer to \"Building\" in README.md)\n",
+             dev, CUDA_ARCH / 10, CUDA_ARCH % 10, props.major, props.minor,
+             props.major * 10 + props.minor);
+        devs.pop_back();
+      }
     }
     device >>= 1;
   }
