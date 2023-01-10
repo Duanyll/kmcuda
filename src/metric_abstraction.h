@@ -90,6 +90,7 @@ struct METRIC<kmcudaDistanceMetricL2, F> {
                                         uint64_t v1_size, uint64_t v1_index) {
     auto res = distance_t(v1, v2, v1_size, v1_index);
     return _eq(res, res) ? res : 0;
+    // return res;
   }
 
   FPATTR static float distance_tt(const F *__restrict__ v, uint64_t size,

@@ -274,13 +274,13 @@ __global__ void kmeans_assign_lloyd_smallc(
     }
   }
   if (nearest == UINT32_MAX) {
-    if (!insane) {
-      printf("CUDA kernel kmeans_assign: nearest neighbor search failed for "
-             "sample %" PRIu32 "\n", sample);
-      return;
-    } else {
+    // if (!insane) {
+    //   printf("CUDA kernel kmeans_assign: nearest neighbor search failed for "
+    //          "sample %" PRIu32 "\n", sample);
+    //   return;
+    // } else {
       nearest = d_clusters_size;
-    }
+    // }
   }
   uint32_t ass = assignments[sample];
   assignments_prev[sample] = ass;
@@ -347,13 +347,13 @@ __global__ void kmeans_assign_lloyd(
     }
   }
   if (nearest == UINT32_MAX) {
-    if (!insane) {
-      printf("CUDA kernel kmeans_assign: nearest neighbor search failed for "
-             "sample %" PRIu32 "\n", sample);
-      return;
-    } else {
+    // if (!insane) {
+    //   printf("CUDA kernel kmeans_assign: nearest neighbor search failed for "
+    //          "sample %" PRIu32 "\n", sample);
+    //   return;
+    // } else {
       nearest = d_clusters_size;
-    }
+    // }
   }
   uint32_t ass = assignments[sample];
   assignments_prev[sample] = ass;
