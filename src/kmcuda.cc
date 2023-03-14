@@ -325,11 +325,12 @@ KMCUDAResult kmeans_init_centroids(
         }
         if (j == 0 || j > samples_size) {
           assert(j > 0 && j <= samples_size);
-          INFO("\ninternal bug in kmeans_init_centroids: j = %" PRIu32 "\n", j);
-        }
-        RETERR(cuda_copy_sample_t(
+          // INFO("\ninternal bug in kmeans_init_centroids: j = %" PRIu32 "\n", j);
+        } else {
+          RETERR(cuda_copy_sample_t(
             j - 1, i * features_size, samples_size, features_size, devs,
             verbosity, samples, centroids));
+        }
       }
       SYNC_ALL_DEVS;
       break;

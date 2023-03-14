@@ -88,6 +88,14 @@ struct METRIC<kmcudaDistanceMetricL2, F> {
     return _sqrt(_float(_fin(dist)));
   }
 
+  FPATTR static float distance_t_no_nan(const F *__restrict__ v1,
+                                        const F *__restrict__ v2,
+                                        uint64_t v1_size, uint64_t v1_index) {
+    auto res = distance_t(v1, v2, v1_size, v1_index);
+    return _eq(res, res) ? res : 0;
+    // return res;
+  }
+
   FPATTR static float distance_tt(const F *__restrict__ v, uint64_t size,
                                   uint64_t index1, uint64_t index2) {
     // Kahan summation with inverted c
@@ -204,6 +212,13 @@ struct METRIC<kmcudaDistanceMetricCosine, F> {
       prod = tprod;
     }
     return _float(distance(_const<F>(1), _const<F>(1), prod));
+  }
+
+  FPATTR static float distance_t_no_nan(const F *__restrict__ v1,
+                                        const F *__restrict__ v2,
+                                        uint64_t v1_size, uint64_t v1_index) {
+    auto res = distance_t(v1, v2, v1_size, v1_index);
+    return _eq(res, res) ? res : 0;
   }
 
   FPATTR static float distance_tt(const F *__restrict__ v, uint64_t size,
