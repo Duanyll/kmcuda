@@ -13,7 +13,7 @@ class SetupConfigurationError(Exception):
 
 
 class CMakeBuild(build_py):
-    SHLIB = "libKMCUDA.so"
+    SHLIB = "libKMCUDA.dll"
 
     def run(self):
         if not self.dry_run:

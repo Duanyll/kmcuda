@@ -51,7 +51,7 @@ static KMCUDAResult check_kmeans_args(
   if (yinyang_t < 0 || yinyang_t > 0.5) {
     return kmcudaInvalidArguments;
   }
-#if CUDA_ARCH < 60
+#if defined(__CUDA_ARCH__) &&  CUDA_ARCH < 60
   if (fp16x2) {
     INFO("CUDA device arch %d does not support fp16\n", CUDA_ARCH);
     return kmcudaInvalidArguments;
@@ -246,7 +246,7 @@ KMCUDAResult kmeans_init_centroids(
       INFO("randomly picking initial centroids...\n");
       std::vector<uint32_t> chosen(samples_size);
       #pragma omp parallel for
-      for (uint32_t s = 0; s < samples_size; s++) {
+      for (int32_t s = 0; s < samples_size; s++) {
         chosen[s] = s;
       }
       std::random_shuffle(chosen.begin(), chosen.end());
@@ -325,11 +325,12 @@ KMCUDAResult kmeans_init_centroids(
         }
         if (j == 0 || j > samples_size) {
           assert(j > 0 && j <= samples_size);
-          INFO("\ninternal bug in kmeans_init_centroids: j = %" PRIu32 "\n", j);
-        }
-        RETERR(cuda_copy_sample_t(
+          // INFO("\ninternal bug in kmeans_init_centroids: j = %" PRIu32 "\n", j);
+        } else {
+          RETERR(cuda_copy_sample_t(
             j - 1, i * features_size, samples_size, features_size, devs,
             verbosity, samples, centroids));
+        }
       }
       SYNC_ALL_DEVS;
       break;
@@ -560,7 +561,7 @@ static KMCUDAResult check_knn_args(
       neighbors == nullptr) {
     return kmcudaInvalidArguments;
   }
-#if CUDA_ARCH < 60
+#if defined(__CUDA_ARCH__) && CUDA_ARCH < 60
   if (fp16x2) {
     INFO("CUDA device arch %d does not support fp16\n", CUDA_ARCH);
     return kmcudaInvalidArguments;
@@ -651,7 +652,7 @@ KMCUDAResult knn_cuda(
         new std::tuple<uint32_t, uint32_t>[samples_size]);
     if (device_ptrs < 0) {
       #pragma omp parallel for
-      for (uint32_t s = 0; s < samples_size; s++) {
+      for (int32_t s = 0; s < samples_size; s++) {
         asses_with_idxs[s] = std::make_tuple(assignments[s], s);
       }
     } else {
@@ -662,7 +663,7 @@ KMCUDAResult knn_cuda(
           asses_on_host.get(), assignments, samples_size * sizeof(uint32_t),
           cudaMemcpyDeviceToHost), kmcudaMemoryCopyError);
       #pragma omp parallel for
-      for (uint32_t s = 0; s < samples_size; s++) {
+      for (int32_t s = 0; s < samples_size; s++) {
         asses_with_idxs[s] = std::make_tuple(asses_on_host[s], s);
       }
     }

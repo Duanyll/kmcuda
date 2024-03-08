@@ -50,7 +50,7 @@ __global__ void kmeans_plus_plus(
     centroids += (cc - 1) * d_features_size;
     const uint32_t local_sample = sample + offset;
     if (_eq(samples[local_sample], samples[local_sample])) {
-      dist = METRIC<M, F>::distance_t(
+      dist = METRIC<M, F>::distance_t_no_nan(
           samples, centroids, d_samples_size, local_sample);
     }
     float prev_dist;
@@ -83,7 +83,7 @@ __global__ void kmeans_afkmc2_calc_q_dists(
       c1[i] = samples[static_cast<uint64_t>(c1_index) * d_features_size + i];
     }
     __syncthreads();
-    dist = METRIC<M, F>::distance_t(samples, c1, d_samples_size, sample);
+    dist = METRIC<M, F>::distance_t_no_nan(samples, c1, d_samples_size, sample);
     dist *= dist;
     dists[sample] = dist;
   }
@@ -167,7 +167,7 @@ __global__ void kmeans_afkmc2_min_dist(
   }
   float min_dist = FLT_MAX;
   for (uint32_t c = 0; c < k; c++) {
-    float dist = METRIC<M, F>::distance_t(
+    float dist = METRIC<M, F>::distance_t_no_nan(
         samples, centroids + c * d_features_size, d_samples_size, choices[chi]);
     if (dist < min_dist) {
       min_dist = dist;
@@ -194,7 +194,7 @@ __global__ void kmeans_afkmc2_min_dist_transposed(
   for (uint32_t chi = 0; chi < m; chi++) {
     float dist = FLT_MAX;
     if (c < k) {
-      dist = METRIC<M, F>::distance_t(
+      dist = METRIC<M, F>::distance_t_no_nan(
           samples, centroids + c * d_features_size, d_samples_size, choices[chi]);
     }
     float warp_min = warpReduceMin(dist);
@@ -274,13 +274,13 @@ __global__ void kmeans_assign_lloyd_smallc(
     }
   }
   if (nearest == UINT32_MAX) {
-    if (!insane) {
-      printf("CUDA kernel kmeans_assign: nearest neighbor search failed for "
-             "sample %" PRIu32 "\n", sample);
-      return;
-    } else {
+    // if (!insane) {
+    //   printf("CUDA kernel kmeans_assign: nearest neighbor search failed for "
+    //          "sample %" PRIu32 "\n", sample);
+    //   return;
+    // } else {
       nearest = d_clusters_size;
-    }
+    // }
   }
   uint32_t ass = assignments[sample];
   assignments_prev[sample] = ass;
@@ -347,13 +347,13 @@ __global__ void kmeans_assign_lloyd(
     }
   }
   if (nearest == UINT32_MAX) {
-    if (!insane) {
-      printf("CUDA kernel kmeans_assign: nearest neighbor search failed for "
-             "sample %" PRIu32 "\n", sample);
-      return;
-    } else {
+    // if (!insane) {
+    //   printf("CUDA kernel kmeans_assign: nearest neighbor search failed for "
+    //          "sample %" PRIu32 "\n", sample);
+    //   return;
+    // } else {
       nearest = d_clusters_size;
-    }
+    // }
   }
   uint32_t ass = assignments[sample];
   assignments_prev[sample] = ass;
@@ -469,7 +469,7 @@ __global__ void kmeans_yy_init(
         // this may happen if the centroid is insane (NaN)
         continue;
       }
-      float dist = METRIC<M, F>::distance_t(
+      float dist = METRIC<M, F>::distance_t_no_nan(
           samples, shared_centroids + (c - gc) * d_features_size,
           d_samples_size, sample + offset);
       if (c != nearest) {
@@ -569,7 +569,7 @@ __global__ void kmeans_yy_global_filter(
     return;
   }
   upper_bound = 0;
-  upper_bound = METRIC<M, F>::distance_t(
+  upper_bound = METRIC<M, F>::distance_t_no_nan(
       samples, centroids + cluster * d_features_size,
       d_samples_size, sample + offset);
   bounds[sample] = upper_bound;
@@ -640,7 +640,7 @@ __global__ void kmeans_yy_local_filter(
       if (second_min_dist < lower_bound) {
         continue;
       }
-      float dist = METRIC<M, F>::distance_t(
+      float dist = METRIC<M, F>::distance_t_no_nan(
           samples, shared_centroids + (c - gc) * d_features_size,
           d_samples_size, sample + offset);
       if (dist < min_dist) {
@@ -680,7 +680,7 @@ __global__ void kmeans_calc_average_distance(
   float dist = 0;
   if (sample < length) {
     sample += offset;
-    dist = METRIC<M, F>::distance_t(
+    dist = METRIC<M, F>::distance_t_no_nan(
         samples, centroids + assignments[sample] * d_features_size,
         d_samples_size, sample);
   }
