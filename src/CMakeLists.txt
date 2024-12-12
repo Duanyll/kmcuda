@@ -25,19 +25,17 @@ if (NOT DISABLE_PYTORCH)
     # suppress C4624
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4624")
   endif()
-  find_package(PythonInterp 3 REQUIRED)
-  find_package(PythonLibs 3 REQUIRED)
-  execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import torch; print(torch.utils.cmake_prefix_path)" OUTPUT_VARIABLE PYTORCH_CMAKE_PREFIX_PATH OUTPUT_STRIP_TRAILING_WHITESPACE)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+  execute_process(COMMAND ${Python3_EXECUTABLE} -c "import torch; print(torch.utils.cmake_prefix_path)" OUTPUT_VARIABLE PYTORCH_CMAKE_PREFIX_PATH OUTPUT_STRIP_TRAILING_WHITESPACE)
   list(APPEND CMAKE_PREFIX_PATH "${PYTORCH_CMAKE_PREFIX_PATH}/Torch")
   message("PYTORCH_CMAKE_PREFIX_PATH ${PYTORCH_CMAKE_PREFIX_PATH}")
   message("CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH}")
   find_package(Torch REQUIRED)
   find_library(TORCH_PYTHON_LIBRARY torch_python PATHS "${TORCH_INSTALL_PREFIX}/lib")
 elseif (NOT DISABLE_PYTHON)
-  find_package(PythonInterp 3 REQUIRED)
-  find_package(PythonLibs 3 REQUIRED)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
   if (NOT NUMPY_INCLUDES)
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import numpy; print(numpy.get_include())" OUTPUT_VARIABLE NUMPY_INCLUDES)
+    execute_process(COMMAND ${Python3_EXECUTABLE} -c "import numpy; print(numpy.get_include())" OUTPUT_VARIABLE NUMPY_INCLUDES)
   endif()
 endif()
 
@@ -47,7 +45,7 @@ endif()
 
 set(SOURCE_FILES kmcuda.cc kmcuda.h wrappers.h private.h fp_abstraction.h tricks.cuh
                  metric_abstraction.h kmeans.cu knn.cu transpose.cu)
-if (PYTHONLIBS_FOUND)
+if (Python3_FOUND)
   if (NOT DISABLE_PYTORCH)
     list(APPEND SOURCE_FILES torch.cc)
   else()
@@ -66,11 +64,11 @@ add_compile_definitions(CUDA_ARCH=${CUDA_ARCH})
 target_link_libraries(KMCUDA CUDA::curand)
 target_link_libraries(KMCUDA OpenMP::OpenMP_CXX)
 
-if (PYTHONLIBS_FOUND)
+if (Python3_FOUND)
   if (NOT DISABLE_PYTORCH)
-    include_directories(${PYTHON_INCLUDE_DIRS})
+    include_directories(${Python3_INCLUDE_DIRS})
     target_link_libraries(KMCUDA 
-      ${PYTHON_LIBRARIES}
+      ${Python3_LIBRARIES}
       ${TORCH_LIBRARIES}
       ${TORCH_PYTHON_LIBRARY}
     )
@@ -80,8 +78,8 @@ if (PYTHONLIBS_FOUND)
       target_compile_definitions(KMCUDA PRIVATE TORCH_EXTENSION_NAME=libKMCUDA)
     endif()
   else()
-    include_directories(${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDES})
-    target_link_libraries(KMCUDA ${PYTHON_LIBRARIES})
+    include_directories(${Python3_INCLUDE_DIRS} ${NUMPY_INCLUDES})
+    target_link_libraries(KMCUDA ${Python3_LIBRARIES})
   endif()
 endif()
 
