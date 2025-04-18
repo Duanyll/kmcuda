@@ -15,7 +15,7 @@
 std::tuple<torch::Tensor, torch::Tensor> torch_kmeans_cuda(
     torch::Tensor samples, uint32_t clusters_size, torch::Tensor centroids,
     std::string init_str, float tolerance, float yinyang_t,
-    std::string metric_str, uint32_t seed, int32_t verbosity) {
+    std::string metric_str, uint32_t seed, int32_t verbosity, int32_t device) {
     bool has_centroids = centroids.numel() > 0;
 
     // Handle init
@@ -64,7 +64,6 @@ std::tuple<torch::Tensor, torch::Tensor> torch_kmeans_cuda(
     samples = samples.contiguous();
 
     // Handle device
-    uint32_t device = 0;  // Use all GPUs
     int32_t device_ptrs = -1;
     if (samples.is_cpu()) {
         device_ptrs = -1;
@@ -72,6 +71,14 @@ std::tuple<torch::Tensor, torch::Tensor> torch_kmeans_cuda(
         device_ptrs = samples.device().index();
     } else {
         TORCH_CHECK(false, "samples must be on CPU or CUDA");
+    }
+
+    if (device < 0) {
+        if (device_ptrs == -1) {
+            device = 0;
+        } else {
+            device = 1 << device_ptrs;
+        }
     }
 
     // Allocate centroids
@@ -115,5 +122,5 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
           py::arg("clusters_size"), py::arg("centroids") = torch::empty(0),
           py::arg("init") = "kmeans++", py::arg("tolerance") = 0.01f,
           py::arg("yinyang_t") = 0.1f, py::arg("metric") = "l2",
-          py::arg("seed") = 42, py::arg("verbosity") = 0);
+          py::arg("seed") = 42, py::arg("verbosity") = 0, py::arg("device") = -1);
 }
